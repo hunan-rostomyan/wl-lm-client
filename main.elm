@@ -10,7 +10,6 @@ import UrlParser exposing ((</>))
 import Bootstrap.Navbar as Navbar
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
-import Bootstrap.Card as Card
 import Bootstrap.Form.Input as Input
 import Bootstrap.Button as Button
 
