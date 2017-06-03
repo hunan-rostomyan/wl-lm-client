@@ -1,5 +1,5 @@
 main_in=main.elm
-main_out=bin/main.js
+main_out=js/main.js
 
 compile:
 	elm make $(main_in) --output $(main_out)
