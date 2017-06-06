@@ -4,7 +4,9 @@ import os.path
 import simplejson as json
 
 from flask import Flask
+from flask import jsonify
 from flask import render_template
+from flask import request
 from flask import send_from_directory
 
 
@@ -20,9 +22,11 @@ def main():
     return render_template('index.html')
 
 
-@app.route('/eval/')
+@app.route('/eval/', methods=['POST'])
 def eval():
-    return json.dumps([88.5])
+    data = request.json
+    text = data['text']
+    return jsonify(json.dumps([len(text)]))
 
 
 @app.route('/<path:path>')

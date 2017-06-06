@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Json.Decode exposing (..)
+import Json.Encode exposing (..)
 import Http exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -66,9 +67,17 @@ type Msg
 
 evaluateText : String -> Cmd Msg
 evaluateText text =
-    "http://127.0.0.1:7777/eval/"
-        |> Http.getString
-        |> Http.send EvaluationResult
+    let 
+        body =
+            (Http.jsonBody
+                (Json.Encode.object
+                    [ ( "text", Json.Encode.string text )
+                    ]
+                )
+            )
+    in
+        Http.post "http://127.0.0.1:7777/eval/" body (Json.Decode.string)
+            |> Http.send EvaluationResult
 
 
 next : String -> Float
@@ -104,12 +113,15 @@ update msg model =
             )
 
         EvaluationResult (Ok str) ->
-            case decodeString (Json.Decode.list float) str of
+            case decodeString (Json.Decode.list Json.Decode.float) str of
                 Ok lst -> ({ model | perplexities = lst }, Cmd.none)
-                Err _ -> (model, Cmd.none)
+                Err _ -> ({ model | perplexities = [-1] }, Cmd.none)
 
-        EvaluationResult (Err _) ->
-            (model, Cmd.none)
+        EvaluationResult (Err err) ->
+            let
+                log = (Debug.log "Error evaluating sentence." err)
+            in
+                ({ model | perplexities = [-1] }, Cmd.none)
 
 
 
@@ -207,7 +219,7 @@ pageEvaluate model =
                 ]
                 [ text "Evaluate" ]
             ]
-        , Grid.col [] (perplexitiesView model)
+        , Grid.col [ Col.attrs [ class "perplexities" ] ] (perplexitiesView model)
         ]
     ]
 
