@@ -30,6 +30,7 @@ type alias Model =
     , navState : Navbar.State
     , text : String
     , perplexities : List Float
+    , nextWordList: List String
     }
 
 
@@ -51,6 +52,7 @@ init location =
                                , page = Home
                                , text = ""
                                , perplexities = []
+                               , nextWordList = []
                                }
     in
         ( model, Cmd.batch [ urlCmd, navCmd ] )
@@ -63,6 +65,7 @@ type Msg
     | Evaluate
     | Next
     | EvaluationResult (Result Http.Error String)
+    | NextResult (Result Http.Error String)
 
 
 evaluateText : String -> Cmd Msg
@@ -80,9 +83,19 @@ evaluateText text =
             |> Http.send EvaluationResult
 
 
-next : String -> Float
+next : String -> Cmd Msg
 next text =
-    toFloat (String.length text) - 1
+    let 
+        body =
+            (Http.jsonBody
+                (Json.Encode.object
+                    [ ( "text", Json.Encode.string text )
+                    ]
+                )
+            )
+    in
+        Http.post "http://127.0.0.1:7777/next/" body (Json.Decode.string)
+            |> Http.send NextResult
 
 
 subscriptions : Model -> Sub Msg
@@ -105,7 +118,7 @@ update msg model =
             ( model, evaluateText model.text )
 
         Next ->
-            ( model, Cmd.none)
+            ( model, next model.text)
 
         TextChange newText ->
             ( { model | text = newText }
@@ -123,6 +136,16 @@ update msg model =
             in
                 ({ model | perplexities = [-1] }, Cmd.none)
 
+        NextResult (Ok str) ->
+            case decodeString (Json.Decode.list Json.Decode.string) str of
+                Ok lst -> ({ model | nextWordList = lst }, Cmd.none)
+                Err _ -> ({ model | nextWordList = [] }, Cmd.none)
+
+        NextResult (Err err) ->
+            let
+                log = (Debug.log "Error getting the next word list." err)
+            in
+                ({ model | nextWordList = [] }, Cmd.none)
 
 
 urlUpdate : Navigation.Location -> Model -> ( Model, Cmd Msg )
@@ -194,7 +217,7 @@ perplexitiesView model =
 
 nextWordView : Model -> List (Html Msg)
 nextWordView model =
-    [ ul [] (List.map (\word -> li [] [ text word ]) [ "the", "an", "a" ]) ]
+    [ ul [] (List.map (\word -> li [] [ text word ]) model.nextWordList) ]
 
 
 pageHome : Model -> List (Html Msg)

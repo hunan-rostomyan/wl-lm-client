@@ -29,6 +29,13 @@ def eval():
     return jsonify(json.dumps([len(text)]))
 
 
+@app.route('/next/', methods=['POST'])
+def next():
+    data = request.json
+    text = data['text']
+    return jsonify(json.dumps(text.split()))
+
+
 @app.route('/<path:path>')
 def serve_file(path):
     return send_from_directory('.', path)
