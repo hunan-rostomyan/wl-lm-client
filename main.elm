@@ -184,8 +184,8 @@ menu : Model -> Html Msg
 menu model =
     Navbar.config NavMsg
         |> Navbar.withAnimation
-        |> Navbar.container
         |> Navbar.brand [ href "#" ] [ text "LM Client" ]
+        |> Navbar.attrs [ class "container-fullwidth" ]
         |> Navbar.items
             [ Navbar.itemLink [ href "#evaluate" ] [ text "Evaluate" ]
             , Navbar.itemLink [ href "#next" ] [ text "Next Word" ]
@@ -195,7 +195,7 @@ menu model =
 
 mainContent : Model -> Html Msg
 mainContent model =
-    Grid.container [ class "main" ] <|
+    Grid.containerFluid [ class "main" ] <|
         case model.page of
             Home ->
                 pageHome model

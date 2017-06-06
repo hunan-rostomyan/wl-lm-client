@@ -1,5 +1,9 @@
-.container.main {
-    margin-top: 20px;
+.btn {
+    cursor: pointer;
+}
+
+.main {
+    padding: 15px;
 }
 
 .form-control {
