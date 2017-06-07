@@ -5,7 +5,7 @@ import Json.Encode exposing (..)
 import Http exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, onInput)
+import Html.Events exposing (onClick, onInput, keyCode)
 import Navigation exposing (Location)
 import UrlParser exposing ((</>))
 import Bootstrap.Navbar as Navbar
@@ -66,6 +66,21 @@ type Msg
     | Next
     | EvaluationResult (Result Http.Error String)
     | NextResult (Result Http.Error String)
+    | EvaluateSubmit
+    | NextSubmit
+
+
+
+onEnter : Msg -> Attribute Msg
+onEnter msg =
+    let
+        isEnter code =
+            if code == 13 then
+                Json.Decode.succeed msg
+            else
+                Json.Decode.fail "not ENTER"
+    in
+        Html.Events.on "keydown" (Json.Decode.andThen isEnter keyCode)
 
 
 evaluateText : String -> Cmd Msg
@@ -124,6 +139,12 @@ update msg model =
             ( { model | text = newText }
             , Cmd.none
             )
+
+        EvaluateSubmit ->
+            update Evaluate model
+
+        NextSubmit ->
+            update Next model
 
         EvaluationResult (Ok str) ->
             case decodeString (Json.Decode.list Json.Decode.float) str of
@@ -235,7 +256,7 @@ pageEvaluate model =
     [ h5 [] [ text "Text -> Perplexity" ]
     , Grid.row []
         [ Grid.col []
-            [ Input.text [ Input.id "text", Input.attrs [ onInput TextChange ] ]
+            [ Input.text [ Input.id "text", Input.attrs [ onEnter EvaluateSubmit, onInput TextChange ] ]
             , Button.button
                 [ Button.primary
                 , Button.attrs [ onClick Evaluate ]
@@ -252,14 +273,14 @@ pageNextWords model =
     [ h5 [] [ text "Text -> Next Word" ]
     , Grid.row []
         [ Grid.col []
-            [ Input.text [ Input.id "text", Input.attrs [ onInput TextChange ] ]
+            [ Input.text [ Input.id "text", Input.attrs [ onEnter NextSubmit, onInput TextChange ] ]
             , Button.button
                 [ Button.primary
                 , Button.attrs [ onClick Next ]
                 ]
                 [ text "Compute" ]
             ]
-        , Grid.col [] (nextWordView model)
+        , Grid.col [ Col.attrs [ class "nextWordList" ] ] (nextWordView model)
         ]
     ]
 
